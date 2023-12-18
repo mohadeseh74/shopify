@@ -4,10 +4,23 @@
 .container {
   padding: 0 5rem;
 }
+.row{
+  display: flex;
+  justify-content: space-between;
+}
 .filter-form{
+display: flex;
+justify-content: space-between;
+}
+.filter-holder {
   display: flex;
   gap: 2rem;
   font-size: 14px;
+  align-items: center;
+}
+.sort-summary-wrapper{
+  display: flex;
+  align-items: center;
 }
 .filter-btn{
   background-color: var(--gradient-base-accent-1);
@@ -16,6 +29,7 @@
   padding: 1rem 1.5rem;
   text-decoration: none;
   color: var(--lt-color-gray-100);
+  border: none;
 }
 .filter-badge {
     border: 1px solid var(--lt-color-gray-400);
@@ -24,6 +38,12 @@
     font-size: 14px;
     text-decoration: none;
     color: var(--gradient-base-accent-1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center
+}
+.filter-badge-title{
+  margin-right: 1rem;
 }
 .filter-item{
   position: relative;
@@ -33,6 +53,8 @@
   background-color: var(--gradient-base-background-1);
   position: absolute;
   z-index: 2;
+  border: 1px solid;
+  min-width: 200px;
 }
 .filter-result{
     display: flex;
@@ -42,5 +64,36 @@
 }
 .filter-result_btn{
   color: var(--gradient-base-accent-1);
+  font-size: 14px;
+}
+.filter-dropdown-header{
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid;
+  padding: 1rem;
+}
+.filter-list{
+  padding: 1rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.filter-item-title{
+  padding-right: 1.5rem;
+}
+.filter-item-title .icon-caret{
+  right: 0;
+}
+
+.sort-holder{
+  font-size: 14px;
+  margin-right: 3rem;
+}
+.sort-select-element {
+  border: 0;
+  padding: 1rem;
+  background-color: inherit;
+}
+.filter-summary{
   font-size: 14px;
 }
