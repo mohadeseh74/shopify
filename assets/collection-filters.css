@@ -210,11 +210,9 @@
   width: 100%;
   font-size: 2rem;
 }
-
 .sidebar__item__header {
   display: none;
 }
-
 .sidebar-backdrop {
   display: none;
   position: fixed;
@@ -229,7 +227,6 @@
   -webkit-animation: fadeIn 1.2s ease-in-out;
   animation: fadeIn 1.2s ease-in-out;
 }
-
 .loader__element {
   display: none;
   position: fixed;
@@ -244,7 +241,6 @@
   -webkit-animation: fadeIn 1.2s ease-in-out;
   animation: fadeIn 1.2s ease-in-out;
 }
-
 .sidebar-backdrop__open {
   display: block !important;
 }
@@ -279,11 +275,9 @@
     padding: 0;
     border-right: 0;
   }
-
   .sidebar__open {
     transform: translate(0);
   }
-
   .sidebar--items {
     width: 100%;
     height: 100%;

@@ -3,255 +3,290 @@
 {{ 'collection-filters.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'collection-filters.js' | asset_url }}" defer="defer"></script>
 {% schema %}
-{
-  "name": "Filter Collection",
-  "settings": [
-    {
-      "type": "text",
-      "id": "title",
-      "label": "title"
-    }
-  ]
-}
+  {
+    "name": "Filter Collection",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "title"
+      }
+    ]
+  }
 {% endschema %}
 
 <section>
   <div id="general-loader" class="loader__element"></div>
   <div class="container">
     {% paginate collection.products by 10 %}
-    <div class="row">
-      <aside class="filters sidebar" id="filter-sidebar">
-        <div class="sidebar__item__header">
-          <button class="btn--close" id="sidebar-close-button">
-            {% render 'icon-close-small' %}
-          </button>
-        </div>
-        {%- if collection.filters.size > 0  -%}
-          <div class="filter__header" id="filterHeader">
-            <span>{{ section.settings.title }}{{ collection.filters.active_values.size }}</span>
-            <a id="clear-all" class="filter__btn-remove hidden" href="{{ collection.url }}?view=test&sort_by={{ collection.sort_by }}" onclick="onActiveFilterClick(event)">
-              Clear all
-            </a>
-          </div>
-        {%- endif -%}
-        <div class="filter__result" id="active-product-filter">
-          {%- for filter in collection.filters -%}
-          {%- if filter.type == "price_range" -%}
-          {%- if filter.min_value.value != nil or filter.max_value.value != nil -%}
-          <a class="filter__badge" href="{{ filter.url_to_remove }}" onclick="onActiveFilterClick(event)">
-            <span>
-              {%- assign min_value = filter.min_value.value | default: 0 -%}
-              {%- assign max_value = filter.max_value.value | default: filter.range_max -%}
-              {{ min_value | money }} - {{ max_value | money }}
+      <div class="row">
+        <aside class="filters sidebar" id="filter-sidebar">
+          <div class="sidebar__item__header">
+            <button class="btn--close" id="sidebar-close-button">
               {% render 'icon-close-small' %}
-            </span>
-          </a>
-          {%- endif -%}
-          {%- else -%}
-          {%- for filter_value in filter.active_values -%}
-          <a class="filter__badge" href="{{ filter_value.url_to_remove }}"  onclick="onActiveFilterClick(event)">
-            <span class="filter__badge__title">
-              {{ filter.label }}: {{ filter_value.label }}
-            </span>
-            {% render 'icon-close-small' %}
-          </a>
-          {%- endfor -%}
-          {%- endif -%}
-          {%- endfor -%}
-        </div>
-        <form class="filter__form" id="filter-form">
-          {%- for filter in collection.filters -%}
-          <details class="filter__form__item">
-            <summary class="filter__form__item-title">
-              <div>
-                <span>{{ filter.label }}</span>
-
-                {%- if filter.active_values.size > 0 -%}
-                <span>({{ filter.active_values.size }})</span>
-                {%- endif -%}
-              </div>
-              {% render 'icon-caret' %}
-            </summary>
-
-            <div class="filter__dropdown">
-              {%- case filter.type -%}
-              {%- when 'boolean' -%}
-              <ul class="filter__dropdown__list">
-                <li>
-                  <label class="filter__dropdown-item-label"
-                    for="Filter-{{ filter.param_name }}-{{ filter.true_value.value }}">
-                    <input type="checkbox" name="{{ filter.param_name }}" value="{{ filter.true_value.value }}"
-                      id="Filter-{{ filter.param_name }}" {% if filter.true_value.active -%} checked{%- endif %} {% if
-                      filter.true_value.count == 0 and filter.true_value.active == false -%} disabled{%- endif -%}>
-                    {{filter.true_value.label }} </label>
-                </li>
-                <li>
-                  <label class="filter__dropdown-item-label"
-                    for="Filter-{{ filter.param_name }}-{{ filter.false_value.value }}">
-                    <input type="checkbox" name="{{ filter.param_name }}" value="{{ filter.false_value.value }}"
-                      id="Filter-{{ filter.param_name }}" {% if filter.false_value.active -%} checked{%- endif %} {% if
-                      filter.false_value.count==0 and filter.false_value.active==false -%} disabled{%- endif %}> {{
-                    filter.false_value.label }} </label>
-                </li>
-              </ul>
-
-
-              {%- when 'list' -%}
-              <ul class="filter__dropdown__list">
-                {%- for filter_value in filter.values -%}
-                <li>
-                  <label class="filter__dropdown-item-label" for="Filter-{{ filter.param_name }}-{{ forloop.index }}">
-                    <input type="checkbox" name="{{ filter_value.param_name }}" value="{{ filter_value.value }}"
-                      id="Filter-{{ filter.param_name }}-{{ forloop.index }}" {% if filter_value.active -%} checked{%-
-                      endif %} {% if filter_value.count==0 and filter_value.active==false -%} disabled{%- endif %}>
-                    <span>
-                      {%- case filter_value.display.type -%}
-                      {%- when 'colors' -%}
-                      {% liquid
-                      assign size_limit = filter_value.display.value.size | at_most: 4
-                      assign rotation = '0deg'
-                      if size_limit == 2
-                      assign rotation = '45deg'
-                      endif
-
-                      assign angle_increment = 360 | divided_by: size_limit
-                      assign angle = 0
-                      %}
-                      {%- capture conic_gradient -%}
-                      {%- for color in filter_value.display.value limit: size_limit -%}
-                      {{ color }} {{ angle }}deg{%- assign angle = angle | plus: angle_increment %} {{ angle }}deg{%-
-                      unless
-                      forloop.last %}, {%- endunless -%}
-                      {%- endfor -%}
-                      {%- endcapture -%}
-                      <span style="
-                                  width: 25px;
-                                  height: 25px;
-                                  border-radius: 50%;
-                                  display: flex;
-                                  justify-content: center;
-                                  align-items: center;
-                                  background: conic-gradient({{ conic_gradient }}); transform: rotateZ({{ rotation }});
-                                ">
-                      </span>
-                      {%- when 'image' -%}
-                      {{
-                      filter_value.display.value | image_url: width: 25 | image_tag: alt: filter_value.display.value.alt
-                      }}
-                      {%- else -%}
-                      <span class="visual-display__child"></span>
-                      {%- endcase -%}
-                    </span>
-                    {{ filter_value.label }}
-                  </label>
-                </li>
-                {%- endfor -%}
-              </ul>
-              {%- when 'price_range' -%}
-              <div class="filter-group-display__price-range">
-                <div class="filter-group-display__price-range-from">
-                  <div class="filter__price__range">
-                    <span>{{ cart.currency.symbol }}</span>
-                    <input class="filter__price__range-input" name="{{ filter.min_value.param_name }}"
-                      id="Filter-{{ filter.min_value.param_name }}" {% if filter.min_value.value -%}
-                      value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}" {%- endif %}
-                      type="number" placeholder="From" min="0"
-                      max="{{ filter.range_max | money_without_currency | replace: ',', '' }}">
-                  </div>
-
-                </div>
-                <div class="filter-group-display__price-range-to">
-
-                  <div class="filter__price__range">
-                    <span>{{ cart.currency.symbol }}</span>
-                    <input class="filter__price__range-input" name="{{ filter.max_value.param_name }}"
-                      id="Filter-{{ filter.max_value.param_name }}" {% if filter.max_value.value -%}
-                      value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}" {%- endif %}
-                      type="number" placeholder="To" min="0"
-                      max="{{ filter.range_max | money_without_currency | replace: ',', '' }}">
-
-
-                  </div>
-                </div>
-              </div>
-              {%- endcase -%}
+            </button>
+          </div>
+          {%- if collection.filters.size > 0 -%}
+            <div class="filter__header" id="filterHeader">
+              <span>{{ section.settings.title }}{{ collection.filters.active_values.size }}</span>
+              <a
+                id="clear-all"
+                class="filter__btn-remove hidden"
+                href="{{ collection.url }}?view=test&sort_by={{ collection.sort_by }}"
+                onclick="onActiveFilterClick(event)">
+                Clear all
+              </a>
             </div>
-          </details>
-          {%- endfor -%}
-          <div class="sidebar__action">
-            <input class="filter__btn-apply" type="submit" value="Apply">
-            <a class="filter__btn-remove-mobile" href="{{ collection.url }}?view=test&sort_by={{ collection.sort_by }}" onclick="onActiveFilterClick(event)">
-              Clear all
-            </a>
+          {%- endif -%}
+          <div class="filter__result" id="active-product-filter">
+            {%- for filter in collection.filters -%}
+              {%- if filter.type == "price_range" -%}
+                {%- if filter.min_value.value != nil or filter.max_value.value != nil -%}
+                  <a
+                    class="filter__badge"
+                    href="{{ filter.url_to_remove }}"
+                    onclick="onActiveFilterClick(event)">
+                    <span>
+                      {%- assign min_value = filter.min_value.value | default: 0 -%}
+                      {%- assign max_value = filter.max_value.value | default: filter.range_max -%}
+                      {{ min_value | money }} - {{ max_value | money }}
+                      {% render 'icon-close-small' %}
+                    </span>
+                  </a>
+                {%- endif -%}
+              {%- else -%}
+                {%- for filter_value in filter.active_values -%}
+                  <a
+                    class="filter__badge"
+                    href="{{ filter_value.url_to_remove }}"
+                    onclick="onActiveFilterClick(event)">
+                    <span class="filter__badge__title">
+                      {{ filter.label }}: {{ filter_value.label }}
+                    </span>
+                    {% render 'icon-close-small' %}
+                  </a>
+                {%- endfor -%}
+              {%- endif -%}
+            {%- endfor -%}
           </div>
-        </form>
-
-      </aside>
-
-
-      <div class="products">
-        <div class="summery__wraper">
-          <button class="btn-mobile" id="sidebar-open-button">
-            {% render 'icon-filter' %} Filters
-          </button>
-          <div class="sort__wrapper">
-            <label for="sort-by">Sort By:</label>
-            <select class="sort__select__element" id="sort-by">
-              {% assign sort_by = collection.sort_by | default: collection.default_sort_by %}
-
-              {% for option in collection.sort_options %}
-              <option value="{{ option.value }}" {% if option.value==sort_by %} selected="selected" {% endif %}>
-                {{ option.name }}
-              </option>
-              {% endfor %}
-            </select>
+          <form class="filter__form" id="filter-form">
+            {%- for filter in collection.filters -%}
+              <details class="filter__form__item">
+                <summary class="filter__form__item-title">
+                  <div>
+                    <span>{{ filter.label }}</span>
+                    {%- if filter.active_values.size > 0 -%}
+                      <span>({{ filter.active_values.size }})</span>
+                    {%- endif -%}
+                  </div>
+                  {% render 'icon-caret' %}
+                </summary>
+                <div class="filter__dropdown">
+                  {%- case filter.type -%}
+                    {%- when 'boolean' -%}
+                      <ul class="filter__dropdown__list">
+                        <li>
+                          <label class="filter__dropdown-item-label" for="Filter-{{ filter.param_name }}-{{ filter.true_value.value }}">
+                            <input
+                              type="checkbox"
+                              name="{{ filter.param_name }}"
+                              value="{{ filter.true_value.value }}"
+                              id="Filter-{{ filter.param_name }}"
+                              {% if filter.true_value.active -%}
+                              checked{%- endif %}
+                              {% if filter.true_value.count==0 and filter.true_value.active==false -%}
+                              disabled{%- endif -%}>
+                            {{ filter.true_value.label }}
+                          </label>
+                        </li>
+                        <li>
+                          <label class="filter__dropdown-item-label" for="Filter-{{ filter.param_name }}-{{ filter.false_value.value }}">
+                            <input
+                              type="checkbox"
+                              name="{{ filter.param_name }}"
+                              value="{{ filter.false_value.value }}"
+                              id="Filter-{{ filter.param_name }}"
+                              {% if filter.false_value.active -%}
+                              checked{%- endif %}
+                              {% if filter.false_value.count==0 and filter.false_value.active==false -%}
+                              disabled{%- endif %}> {{ filter.false_value.label }}
+                          </label>
+                        </li>
+                      </ul>
+                    {%- when 'list' -%}
+                      <ul class="filter__dropdown__list">
+                        {%- for filter_value in filter.values -%}
+                          <li>
+                            <label class="filter__dropdown-item-label" for="Filter-{{ filter.param_name }}-{{ forloop.index }}">
+                              <input
+                                type="checkbox"
+                                name="{{ filter_value.param_name }}"
+                                value="{{ filter_value.value }}"
+                                id="Filter-{{ filter.param_name }}-{{ forloop.index }}"
+                                {% if filter_value.active -%}
+                                checked{%- endif %}
+                                {% if filter_value.count==0 and filter_value.active==false -%}
+                                disabled{%- endif %}>
+                              <span>
+                                {%- case filter_value.display.type -%}
+                                  {%- when 'colors' -%}
+                                    {% liquid
+                                      assign size_limit = filter_value.display.value.size | at_most: 4
+                                      assign rotation = '0deg'
+                                      if size_limit == 2
+                                        assign rotation = '45deg'
+                                      endif
+                                      assign angle_increment = 360 | divided_by: size_limit
+                                      assign angle = 0
+                                    %}
+                                    {%- capture conic_gradient -%}
+                                    {%- for color in filter_value.display.value limit: size_limit -%}
+                                    {{ color }} {{ angle }}deg{%- assign angle = angle | plus: angle_increment %} {{ angle }}deg{%-
+                                    unless
+                                    forloop.last %}, {%- endunless -%}
+                                    {%- endfor -%}
+                                    {%- endcapture -%}
+                                    <span style="
+                                    width: 25px;
+                                    height: 25px;
+                                    border-radius: 50%;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    background: conic-gradient({{ conic_gradient }}); transform: rotateZ({{ rotation }});
+                                  ">
+                                  </span>
+                                  {%- when 'image' -%}
+                                    {{
+                                      filter_value.display.value | image_url: width: 25 | image_tag: alt: filter_value.display.value.alt
+                                    }}
+                                  {%- else -%}
+                                    <span class="visual-display__child"></span>
+                                {%- endcase -%}
+                              </span>
+                              {{ filter_value.label }}
+                            </label>
+                          </li>
+                        {%- endfor -%}
+                      </ul>
+                    {%- when 'price_range' -%}
+                      <div class="filter-group-display__price-range">
+                        <div class="filter-group-display__price-range-from">
+                          <div class="filter__price__range">
+                            <span>{{ cart.currency.symbol }}</span>
+                            <input
+                              class="filter__price__range-input"
+                              name="{{ filter.min_value.param_name }}"
+                              id="Filter-{{ filter.min_value.param_name }}"
+                              {% if filter.min_value.value -%}
+                              value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                              {%- endif %}
+                              type="number"
+                              placeholder="From"
+                              min="0"
+                              max="{{ filter.range_max | money_without_currency | replace: ',', '' }}">
+                          </div>
+                        </div>
+                        <div class="filter-group-display__price-range-to">
+                          <div class="filter__price__range">
+                            <span>{{ cart.currency.symbol }}</span>
+                            <input
+                              class="filter__price__range-input"
+                              name="{{ filter.max_value.param_name }}"
+                              id="Filter-{{ filter.max_value.param_name }}"
+                              {% if filter.max_value.value -%}
+                              value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                              {%- endif %}
+                              type="number"
+                              placeholder="To"
+                              min="0"
+                              max="{{ filter.range_max | money_without_currency | replace: ',', '' }}">
+                          </div>
+                        </div>
+                      </div>
+                  {%- endcase -%}
+                </div>
+              </details>
+            {%- endfor -%}
+            <div class="sidebar__action">
+              <input
+                class="filter__btn-apply"
+                type="submit"
+                value="Apply">
+              <a
+                class="filter__btn-remove-mobile"
+                href="{{ collection.url }}?view=test&sort_by={{ collection.sort_by }}"
+                onclick="onActiveFilterClick(event)">
+                Clear all
+              </a>
+            </div>
+          </form>
+        </aside>
+        <div class="products">
+          <div class="summery__wraper">
+            <button class="btn-mobile" id="sidebar-open-button">
+              {% render 'icon-filter' %} Filters
+            </button>
+            <div class="sort__wrapper">
+              <label for="sort-by">Sort By:</label>
+              <select class="sort__select__element" id="sort-by">
+                {% assign sort_by = collection.sort_by | default: collection.default_sort_by %}
+                {% for option in collection.sort_options %}
+                  <option
+                    value="{{ option.value }}"
+                    {% if option.value==sort_by %}
+                    selected="selected"
+                    {% endif %}>
+                    {{ option.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div id="product-counter" class="filter__summary">
+              {%- if collection.products_count != collection.all_products_count -%}
+                <span>{{ collection.products_count }} of</span>
+              {%- endif -%}
+              <span>{{ collection.all_products_count }}</span>
+              <span>products</span>
+            </div>
           </div>
-          <div id="product-counter" class="filter__summary">
-            {%- if collection.products_count != collection.all_products_count -%}
-            <span>{{ collection.products_count }} of</span>
-            {%- endif -%}
-            <span>{{ collection.all_products_count }}</span>
-            <span>products</span>
-          </div>
-        </div>
-        <div id="product-list" class="products--list">
-          {%- if collection.products_count == 0 -%}
-          <div class="product--list-empty">
-            <p>Sorry, There is no product!</p>
-            <a class="filter__btn-remove" href="{{ collection.url }}?view=test&sort_by={{ collection.sort_by }}" onclick="onActiveFilterClick(event)">Clear
+          <div id="product-list" class="products--list">
+            {%- if collection.products_count == 0 -%}
+              <div class="product--list-empty">
+                <p>Sorry, There is no product!</p>
+                <a
+                  class="filter__btn-remove"
+                  href="{{ collection.url }}?view=test&sort_by={{ collection.sort_by }}"
+                  onclick="onActiveFilterClick(event)">Clear
               all</a>
+              </div>
+            {%- endif -%}
+            {% for product in collection.products %}
+              {% assign lazy_load = false %}
+              {%- if forloop.index > 2 -%}
+                {%- assign lazy_load = true -%}
+              {%- endif -%}
+              <!-- product info -->
+              <div class="product--item">
+                {% render 'card-product'
+                  , card_product: product
+                  , media_aspect_ratio: section.settings.image_ratio
+                  , show_secondary_image: section.settings.show_secondary_image
+                  , show_vendor: section.settings.show_vendor
+                  , show_rating: section.settings.show_rating
+                  , lazy_load: lazy_load
+                  , show_quick_add: section.settings.enable_quick_add
+                  , section_id: section.id
+                %}
+              </div>
+            {% endfor %}
           </div>
-
-          {%- endif -%}
-
-          {% for product in collection.products %}
-          {% assign lazy_load = false %}
-          {%- if forloop.index > 2 -%}
-          {%- assign lazy_load = true -%}
-          {%- endif -%}
-          <!-- product info -->
-          <div class="product--item">
-            {% render 'card-product'
-            , card_product: product
-            , media_aspect_ratio: section.settings.image_ratio
-            , show_secondary_image: section.settings.show_secondary_image
-            , show_vendor: section.settings.show_vendor
-            , show_rating: section.settings.show_rating
-            , lazy_load: lazy_load
-            , show_quick_add: section.settings.enable_quick_add
-            , section_id: section.id
-            %}
-          </div>
-          {% endfor %}
         </div>
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
       </div>
-
-      <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-    </div>
-
-    <div class="pagination">
-      {{ paginate | default_pagination }}
-    </div>
+      <div class="pagination">
+        {{ paginate | default_pagination }}
+      </div>
     {% endpaginate %}
   </div>
 </section>
